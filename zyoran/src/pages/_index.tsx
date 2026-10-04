@@ -19,17 +19,30 @@ export default function HomePage() {
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [messages, interim, thinking]);
   useEffect(() => () => { recognitionRef.current?.abort(); if (typeof window !== "undefined") window.speechSynthesis?.cancel(); }, []);
 
-  const speak = (text: string) => {
-    if (!voiceEnabled || typeof window === "undefined" || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(text); utterance.rate = 0.96; utterance.pitch = 1.02;
-    utterance.onstart = () => setSpeaking(true); utterance.onend = () => setSpeaking(false); utterance.onerror = () => setSpeaking(false); window.speechSynthesis.speak(utterance);
+  const speak = async (text: string) => {
+    if (!voiceEnabled || typeof window === "undefined") return;
+    window.speechSynthesis?.cancel(); setSpeaking(true);
+    try {
+      const response = await fetch("/api/voice", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
+      if (!response.ok) throw new Error("voice unavailable");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.onended = () => { URL.revokeObjectURL(url); setSpeaking(false); };
+      audio.onerror = () => { URL.revokeObjectURL(url); setSpeaking(false); };
+      await audio.play();
+    } catch {
+      if (!window.speechSynthesis) { setSpeaking(false); return; }
+      const utterance = new SpeechSynthesisUtterance(text); utterance.rate = 0.96; utterance.pitch = 1.02;
+      utterance.onend = () => setSpeaking(false); utterance.onerror = () => setSpeaking(false); window.speechSynthesis.speak(utterance);
+    }
   };
   const sendMessage = async (raw: string) => {
     const content = raw.trim(); if (!content || thinking) return;
     recognitionRef.current?.stop(); setListening(false); setInterim(""); setDraft(""); setNotice("");
     const nextMessages: ChatMessage[] = [...messages, { role: "user", content }]; setMessages(nextMessages); setThinking(true);
     try {
-      const response = await fetch("/_api/intelligence-chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: nextMessages.slice(-12) }) });
+      const response = await fetch("/api/intelligence-chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: nextMessages.slice(-12) }) });
       const data = await response.json(); if (!response.ok) throw new Error(data?.error || "The Intelligence could not respond just now.");
       const answer = String(data.reply || "I'm here. Tell me a little more about what you need."); setMessages((current) => [...current, { role: "assistant", content: answer }]); speak(answer);
     } catch (error) { setNotice(error instanceof Error ? error.message : "Connection interrupted. Please try again."); }
