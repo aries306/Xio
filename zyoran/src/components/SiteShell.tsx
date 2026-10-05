@@ -20,9 +20,9 @@ export function SiteShell({ active, children, eyebrow, title, description }: { a
   return (
     <main className={styles.shell}>
       <header className={styles.topbar}>
-        <a className={styles.brand} href="/" aria-label="Zyoran home">
+        <a className={styles.brand} href="/" aria-label="Zuna home">
           <span className={styles.mark}><span /></span>
-          <span><strong>ZYORAN</strong><small>THE UNIVERSE</small></span>
+          <span><strong>ZUNA</strong><small>ZUNOVERSE</small></span>
         </a>
         <nav className={styles.nav} aria-label="Command center">
           {nav.map((item) => <a key={item.key} className={active === item.key ? styles.active : ""} href={item.href}>{item.label}</a>)}
@@ -42,9 +42,9 @@ export function SiteShell({ active, children, eyebrow, title, description }: { a
       </section>
       <div className={styles.content}>{children}</div>
       <footer className={styles.footer}>
-        <a className={styles.brand} href="/"><span className={styles.mark}><span /></span><span><strong>ZYORAN</strong><small>THE UNIVERSE</small></span></a>
-        <span>A universe of possibility. Intelligence beside you.</span>
-        <a href="/intelligence">Meet The Intelligence <ArrowUpRight size={13} /></a>
+        <a className={styles.brand} href="/"><span className={styles.mark}><span /></span><span><strong>ZUNA</strong><small>ZUNOVERSE</small></span></a>
+        <span>Zuna — a universe of possibility, with Vea beside you.</span>
+        <a href="/intelligence">Meet Vea <ArrowUpRight size={13} /></a>
       </footer>
     </main>
   );
