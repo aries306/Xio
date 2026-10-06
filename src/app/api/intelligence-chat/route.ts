@@ -80,7 +80,12 @@ Speak with calm warmth, precision, curiosity, and quiet confidence. You are a th
     })
   });
 
-  if (!upstream.ok) return Response.json({ error: "Vea's intelligence connection failed." }, { status: 502 });
+  if (!upstream.ok) {
+    if (upstream.status === 429) {
+      return Response.json({ error: "Vea is connected, but the OpenAI API account has no remaining credits. Add API billing/credits and try again." }, { status: 429 });
+    }
+    return Response.json({ error: "Vea's intelligence connection failed." }, { status: 502 });
+  }
   const data = await upstream.json();
   const reply = String(data.output_text || "").trim();
   if (!reply) return Response.json({ error: "Vea couldn't form a response just now." }, { status: 502 });
