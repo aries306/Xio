@@ -68,7 +68,7 @@ Speak with calm warmth, precision, curiosity, and quiet confidence. You are a th
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
     body: JSON.stringify({
-      model: process.env.OPENAI_MODEL || "gpt-5.6",
+      model: process.env.OPENAI_MODEL || "gpt-6-luna",
       reasoning: { effort: "low" },
       max_output_tokens: 700,
       instructions,
