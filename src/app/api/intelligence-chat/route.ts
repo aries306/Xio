@@ -32,13 +32,6 @@ export async function POST(request: Request) {
   if (!parsed.success) return Response.json({ error: "Your message could not be processed." }, { status: 400 });
 
   const fabric = await loadZunaFabric();
-  const contextBlock = [
-    fabric.workspace ? `Universe: ${fabric.workspace.universe}; Intelligence: ${fabric.workspace.intelligence}; Unforeseen layer: ${fabric.workspace.shadow}.` : "Zuna fabric is not connected.",
-    fabric.contexts.length ? `ACTIVE CONTEXTS:\n${fabric.contexts.map((c:any) => JSON.stringify(c)).join("\n")}` : "No active context is available.",
-    fabric.memories.length ? `MEMORY FABRIC:\n${fabric.memories.map(memoryInstruction).join("\n\n")}` : "No memories are available.",
-    fabric.evidence.length ? `RECENT EVIDENCE:\n${fabric.evidence.map((e:any) => JSON.stringify(e)).join("\n")}` : "No evidence is available."
-  ].join("\n\n");
-
   const userText = parsed.data.messages.at(-1)?.content.trim() || "";
   const lower = userText.toLowerCase();
   const activeMemories = fabric.memories.filter((m:any) => m.lifecycle === "active");
