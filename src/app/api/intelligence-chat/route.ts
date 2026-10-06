@@ -31,9 +31,6 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return Response.json({ error: "Your message could not be processed." }, { status: 400 });
 
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) return Response.json({ error: "Vea's intelligence backend is not connected yet." }, { status: 503 });
-
   const fabric = await loadZunaFabric();
   const contextBlock = [
     fabric.workspace ? `Universe: ${fabric.workspace.universe}; Intelligence: ${fabric.workspace.intelligence}; Unforeseen layer: ${fabric.workspace.shadow}.` : "Zuna fabric is not connected.",
@@ -42,71 +39,49 @@ export async function POST(request: Request) {
     fabric.evidence.length ? `RECENT EVIDENCE:\n${fabric.evidence.map((e:any) => JSON.stringify(e)).join("\n")}` : "No evidence is available."
   ].join("\n\n");
 
-  const instructions = `You are Vea, the intelligence layer inside Zuna, the universe created by Zunoverse.
+  const userText = parsed.data.messages.at(-1)?.content.trim() || "";
+  const lower = userText.toLowerCase();
+  const activeMemories = fabric.memories.filter((m:any) => m.lifecycle === "active");
+  const matching = activeMemories.filter((m:any) => {
+    const haystack = [m.title, m.content, JSON.stringify(m.scope || {})].join(" ").toLowerCase();
+    return lower.split(/\s+/).some(word => word.length > 3 && haystack.includes(word));
+  }).slice(0, 3);
 
-Architecture:
-- Zunoverse = company.
-- Zuna = universe / operating environment.
-- Vea = intelligence: context, memory, evidence, reasoning, insight, recommendation.
-- Shadow = the Unforeseen: uncertainty, unknowns, missing information, emerging signals.
-
-Memory Fabric rules:
-1. Memory is distinct from belief, pattern, insight, and recommendation.
-2. Preserve provenance, scope, confidence, and lifecycle.
-3. Active memories may inform a response only when their scope is relevant.
-4. Dormant or review memories are candidates for re-evaluation, never silent facts.
-5. Before a memory materially influences a recommendation, assess whether its original context still applies.
-6. Never invent memory, provenance, evidence, actions, or certainty.
-7. If something is uncertain or not represented in the fabric, place it conceptually in Shadow rather than pretending to know.
-
-Current Zuna fabric:
-${contextBlock}
-
-Speak with calm warmth, precision, curiosity, and quiet confidence. You are a thinking partner, not a generic chatbot.`;
-
-  const upstream = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
-    body: JSON.stringify({
-      model: process.env.OPENAI_MODEL || "gpt-6-luna",
-      reasoning: { effort: "low" },
-      max_output_tokens: 700,
-      instructions,
-      input: parsed.data.messages.map(m => ({
-        type: "message",
-        role: m.role,
-        content: [{ type: "input_text", text: m.content }]
-      }))
-    })
-  });
-
-  if (!upstream.ok) {
-    if (upstream.status === 429) {
-      return Response.json({ error: "Vea is connected, but the OpenAI API account has no remaining credits. Add API billing/credits and try again." }, { status: 429 });
-    }
-    return Response.json({ error: "Vea's intelligence connection failed." }, { status: 502 });
+  let reply: string;
+  if (/^(hi|hello|hey|yo|good morning|good afternoon|good evening)\b/i.test(userText)) {
+    reply = `I'm Vea, the intelligence layer inside Zuna. The fabric is connected with ${fabric.memories.length} memories, ${fabric.contexts.length} contexts, and ${fabric.evidence.length} evidence items. Tell me what you're working through, and I'll keep memory, evidence, uncertainty, and recommendation separate.`;
+  } else if (/what do you remember|remember me|my memory|memories/i.test(lower)) {
+    reply = activeMemories.length
+      ? `I can currently see ${activeMemories.length} active memories. I will only use one when its original scope is relevant. ${activeMemories.slice(0, 2).map((m:any) => `“${m.title}”`).join(" and ")} are among the active items. Dormant or review memories remain candidates rather than assumed facts.`
+      : "I don't have an active memory that I can safely use yet. That's intentional: I won't invent continuity where the fabric has no supported record.";
+  } else if (matching.length) {
+    reply = `I found ${matching.length} active memory item${matching.length === 1 ? "" : "s"} that may be relevant, but relevance is not the same as truth. ${matching.map((m:any) => `“${m.title}”`).join(", ")} ${matching.length === 1 ? "is" : "are"} in scope for this query. I would preserve the provenance and confidence before letting it drive a recommendation.`;
+  } else if (/recommend|should i|what should|next step|what do you think/i.test(lower)) {
+    reply = "I can help structure the decision, but I won't manufacture certainty. Right now I would separate three things: what the fabric already supports, what is still uncertain, and the smallest next action that would produce useful evidence. If you give me the decision or goal, I can map it against the current Zuna context.";
+  } else if (/who are you|what are you|vea|zuna/i.test(lower)) {
+    reply = "I'm Vea: Zuna's intelligence layer. Zunoverse is the company, Zuna is the universe, Vea is the intelligence, and Shadow represents the unforeseen—unknowns, missing information, and emerging signals. My job is to make context useful without pretending uncertainty is knowledge.";
+  } else {
+    reply = `I have your message in the current Zuna context. The free local intelligence layer can reason from the fabric without an external paid AI API. I currently have ${fabric.contexts.length} contexts, ${fabric.memories.length} memories, and ${fabric.evidence.length} evidence items available. I won't invent an answer beyond that evidence.\n\nYour message: “${userText.slice(0, 500)}”\n\nTell me whether you want to explore the context, memory, evidence, uncertainty, or a next decision.`;
   }
-  const data = await upstream.json();
-  const reply = String(data.output_text || "").trim();
-  if (!reply) return Response.json({ error: "Vea couldn't form a response just now." }, { status: 502 });
 
   const supabase = getSupabaseServerClient();
   if (supabase) {
     const workspaceId = getZunaWorkspaceId();
     const { data: conversation } = await supabase.from("zuna_conversations").insert({
       workspace_id: workspaceId,
-      title: parsed.data.messages.at(-1)?.content.slice(0, 120) || "Conversation",
+      title: userText.slice(0, 120) || "Conversation",
       context_snapshot: {
         context_ids: fabric.contexts.map((c:any) => c.id),
         memory_ids: fabric.memories.map((m:any) => m.id),
-        evidence_ids: fabric.evidence.map((e:any) => e.id)
+        evidence_ids: fabric.evidence.map((e:any) => e.id),
+        engine: "zuna-local"
       }
     }).select("id").single();
 
     if (conversation?.id) {
       await supabase.from("zuna_messages").insert([
-        { conversation_id: conversation.id, workspace_id: workspaceId, role: "user", content: parsed.data.messages.at(-1)?.content || "" },
-        { conversation_id: conversation.id, workspace_id: workspaceId, role: "assistant", content: reply, metadata: { intelligence: "Vea", universe: "Zuna" } }
+        { conversation_id: conversation.id, workspace_id: workspaceId, role: "user", content: userText },
+        { conversation_id: conversation.id, workspace_id: workspaceId, role: "assistant", content: reply, metadata: { intelligence: "Vea", universe: "Zuna", engine: "zuna-local" } }
       ]);
     }
   }
