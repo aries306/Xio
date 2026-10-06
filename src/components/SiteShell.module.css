@@ -14,6 +14,8 @@
 .nav a { color: #758897; text-decoration: none; font-size: 11px; white-space: nowrap; padding: 30px 0 27px; border-bottom: 1px solid transparent; }
 .nav a:hover,.nav .active { color: #e7f4f6; border-color: var(--primary); }
 .actions { display: flex; align-items: center; gap: 10px; }
+.talkButton { display: inline-flex; align-items: center; gap: 7px; border: 1px solid rgba(156,233,231,.32); border-radius: 7px; padding: 8px 11px; color: #bfe7e6; background: rgba(156,233,231,.045); text-decoration: none; font-size: 10px; }
+.talkButton:hover { border-color: var(--primary); color: #e7f4f6; background: rgba(156,233,231,.08); }
 .private { display: inline-flex; align-items: center; gap: 6px; color: #7f919f; font: 9px var(--font-family-monospace); white-space: nowrap; }
 .private svg { color: var(--primary); }
 .pageHead { display: flex; justify-content: space-between; gap: 40px; padding: 76px clamp(22px,9vw,140px) 52px; border-bottom: 1px solid rgba(155,181,202,.1); }
