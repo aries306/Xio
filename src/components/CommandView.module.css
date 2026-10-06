@@ -1,0 +1,4 @@
+.metricGrid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; padding-top: 28px; }
+.cardGrid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+.timeline { border-bottom: 1px solid #253541; }
+@media (max-width: 760px) { .metricGrid,.cardGrid { grid-template-columns: 1fr; } }
