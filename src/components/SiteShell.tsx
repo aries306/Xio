@@ -1,6 +1,5 @@
 import React from "react";
 import { ArrowUpRight, CircleDot, LockKeyhole, Mic2 } from "lucide-react";
-import { Button } from "./Button";
 import styles from "./SiteShell.module.css";
 
 type View = "now" | "next" | "projects" | "memory" | "intelligence" | "agents" | "learning" | "effect";
@@ -29,7 +28,7 @@ export function SiteShell({ active, children, eyebrow, title, description }: { a
         </nav>
         <div className={styles.actions}>
           <span className={styles.private}><LockKeyhole size={13} /> Private by design</span>
-          <Button variant="outline" size="sm" onClick={() => { window.location.href = "/intelligence"; }}>Talk to her <Mic2 size={14} /></Button>
+          <a className={styles.talkButton} href="/intelligence">Talk to her <Mic2 size={14} /></a>
         </div>
       </header>
       <section className={styles.pageHead}>
