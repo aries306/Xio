@@ -60,8 +60,12 @@ test("low confidence memories require review", () => {
 });
 
 test("stale or missing revalidation timestamps fail closed", () => {
-  for (const last_revalidated_at of [null, "2025-01-01T00:00:00.000Z", "not-a-date"]) {
-    const result = evaluateMemory({ ...base, last_revalidated_at }, contexts, NOW);
+  for (const overrides of [
+    { last_revalidated_at: null, updated_at: null, created_at: null },
+    { last_revalidated_at: "2025-01-01T00:00:00.000Z" },
+    { last_revalidated_at: "not-a-date", updated_at: null, created_at: null },
+  ]) {
+    const result = evaluateMemory({ ...base, ...overrides }, contexts, NOW);
     assert.equal(result.eligible, false);
     assert.equal(result.status, "stale");
   }
