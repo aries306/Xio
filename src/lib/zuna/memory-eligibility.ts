@@ -33,14 +33,13 @@ function matchesContext(memory: MemoryForEvaluation, contexts: ActiveContext[]):
   const scope = memory.scope ?? {};
   const activeIds = new Set(contexts.map((item) => item.id).filter((v): v is string => Boolean(v)));
   const activeNames = new Set(contexts.map((item) => item.name?.trim().toLowerCase()).filter((v): v is string => Boolean(v)));
-  if (memory.original_context_id && activeIds.has(memory.original_context_id)) return true;
-
   const scoped = Array.isArray(scope.contexts)
     ? scope.contexts.filter((v): v is string => typeof v === "string" && v.trim().length > 0)
     : [];
   if (scoped.length > 0) {
     return scoped.some((value) => activeIds.has(value) || activeNames.has(value.toLowerCase()));
   }
+  if (memory.original_context_id && activeIds.has(memory.original_context_id)) return true;
 
   const contextId = typeof scope.contextId === "string" ? scope.contextId : null;
   const contextName = typeof scope.contextName === "string" ? scope.contextName.toLowerCase() : null;
