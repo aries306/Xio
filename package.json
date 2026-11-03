@@ -1,11 +1,13 @@
 {
-  "name": "zunoverse-zuna",
+  "name": "exelta-zioren",
   "private": true,
   "version": "1.0.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.3",

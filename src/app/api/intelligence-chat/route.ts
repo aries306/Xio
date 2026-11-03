@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     fabric.evidence.length ? `RECENT EVIDENCE:\n${fabric.evidence.map((e:any) => JSON.stringify(e)).join("\n")}` : "No evidence is available."
   ].join("\n\n");
 
-  const instructions = `You are Vea, the intelligence layer inside Zuna, the universe created by Zunoverse.
+  const instructions = `You are Zioren, the intelligence system within Exelta.
 
 Architecture:
 - Zunoverse = company.
@@ -59,7 +59,7 @@ Memory Fabric rules:
 6. Never invent memory, provenance, evidence, actions, or certainty.
 7. If something is uncertain or not represented in the fabric, place it conceptually in Shadow rather than pretending to know.
 
-Current Zuna fabric:
+Current Exelta fabric:
 ${contextBlock}
 
 Speak with calm warmth, precision, curiosity, and quiet confidence. You are a thinking partner, not a generic chatbot.`;
